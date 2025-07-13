@@ -17,6 +17,7 @@ func RegisterArtworkRoutes(app *fiber.App) {
 	app.Get("/artworks/:id", GetArtworksById)
 	app.Delete("/artworks/:id", DeleteArtwork)
 	app.Patch("/artworks/:id", EditArtwork)
+	app.Get("/gallery", GetGallery)
 }
 
 func GetArtWorks(c *fiber.Ctx) error {
@@ -25,6 +26,32 @@ func GetArtWorks(c *fiber.Ctx) error {
 	database.DB.Order("created_at DESC").Find(&artworks)
 
 	return c.JSON(artworks)
+}
+
+func GetGallery(c *fiber.Ctx) error {
+	var artworks []models.Artwork
+
+	if err := database.DB.Order("created_at DESC").Find(&artworks).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve artworks: " + err.Error(),
+		})
+	}
+
+	html := "<html><body><h1>Galeria de Artes 🎨</h1><div style='display: flex; flex-wrap: wrap;'>"
+
+	for _, art := range artworks {
+		html += fmt.Sprintf(`
+					<div style='margin:10px; text-align:center'>
+				<img src='%s' style='max-width:200px; max-height:200px; display:block;' />
+				<h3>%s</h3>
+				<p>%s</p>
+			</div>
+		`, art.ImageURL, art.Title, art.Caption)
+	}
+
+	html += "</div>"
+
+	return c.Type("html").SendString(html)
 }
 
 func CreateArtwork(c *fiber.Ctx) error {
@@ -47,10 +74,10 @@ func CreateArtwork(c *fiber.Ctx) error {
 		})
 	}
 
-	art := models.Artwork {
-		Title: 	 title,
-		Caption: caption,
-		ImageURL: "/" + filePath,
+	art := models.Artwork{
+		Title:     title,
+		Caption:   caption,
+		ImageURL:  "/" + filePath,
 		CreatedAt: time.Now(),
 	}
 
@@ -104,7 +131,6 @@ func DeleteArtwork(c *fiber.Ctx) error {
 
 	return c.SendStatus(fiber.StatusNoContent)
 }
-
 
 type EditArtworkInput struct {
 	Title   string `json:"title"`
