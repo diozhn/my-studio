@@ -72,9 +72,18 @@ http://localhost:3000/uploads/nome_da_imagem.jpg
 
 ---
 
-## 📄 Licença
-MIT
+## 🚧 Funcionalidades Futuras
+
+- 📸 Postagem simultânea em Instagram, Facebook e Pinterest
+
+- ⭐ Sistema de curtidas/favoritos para as artes
+
+- 🖼️ Galeria web simples para visualização e organização
+
+- 🔐 Autenticação de usuários e controle de permissões
+
+- 📢 Notificações para seguidores sobre novas artes
 
 ---
 
-### Feito com 💙 em Go por @diozhn
+#### Feito com 💙 em Go por @diozhn
