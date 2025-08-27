@@ -11,7 +11,7 @@ import (
 
 func main() {
 	godotenv.Load()
-	database.ConnectDB()
+	database.Connect()
 	app := fiber.New()
 	app.Use(logger.New())
 
