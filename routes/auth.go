@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/shareed2k/goth_fiber"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,6 +19,8 @@ func RegisterAuthRoutes(app *fiber.App) {
 	app.Post("/register", Register)
 	app.Post("/login", Login)
 	app.Post("/refresh-token", RefreshToken)
+	app.Get("/auth/:provider", SocialAuthBegin)
+	app.Get("/auth/:provider/callback", SocialAuthCallback)
 }
 
 func Register(c *fiber.Ctx) error {
@@ -153,4 +156,66 @@ func RefreshToken(c *fiber.Ctx) error {
 	newTokenString, _ := newToken.SignedString(jwtSecret)
 
 	return c.JSON(fiber.Map{"token": newTokenString})
+}
+
+// Inicia o fluxo OAuth
+func SocialAuthBegin(c *fiber.Ctx) error {
+	err := goth_fiber.BeginAuthHandler(c)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return nil
+}
+
+// Callback do OAuth
+func SocialAuthCallback(c *fiber.Ctx) error {
+	provider := c.Params("provider")
+	c.Context().SetUserValue("provider", provider)
+	user, err := goth_fiber.CompleteUserAuth(c)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	var dbUser models.User
+	// Procura usuário pelo ID da rede social
+	switch provider {
+	case "google":
+		database.DB.Where("google_id = ?", user.UserID).First(&dbUser)
+	case "instagram":
+		database.DB.Where("instagram_id = ?", user.UserID).First(&dbUser)
+	case "twitter":
+		database.DB.Where("twitter_id = ?", user.UserID).First(&dbUser)
+	}
+
+	// Se não existir, cria novo usuário
+	if dbUser.ID == 0 {
+		dbUser = models.User{
+			Username:    user.Name,
+			Email:       user.Email,
+			GoogleID:    ifThenElse(provider == "google", user.UserID, ""),
+			InstagramID: ifThenElse(provider == "instagram", user.UserID, ""),
+			TwitterID:   ifThenElse(provider == "twitter", user.UserID, ""),
+		}
+		database.DB.Create(&dbUser)
+	}
+
+	// Gera JWT
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": dbUser.ID,
+		"exp":     time.Now().Add(time.Hour * 72).Unix(),
+	})
+	tokenString, _ := token.SignedString(jwtSecret)
+
+	return c.JSON(fiber.Map{
+		"token": tokenString,
+		"user":  dbUser,
+	})
+}
+
+// Função auxiliar para atribuição condicional
+func ifThenElse(cond bool, a, b string) string {
+	if cond {
+		return a
+	}
+	return b
 }

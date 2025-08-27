@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/shareed2k/goth_fiber"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -13,6 +14,7 @@ func UserRoutes(app *fiber.App) {
 	app.Get("/users/:id", RequireAuth, GetUserProfile)
 	app.Patch("/users/:id", RequireAuth, UpdateUserProfile)
 	app.Get("/users/:id/artworks", GetUserArtworks)
+	app.Post("/users/:provider/link", RequireAuth, LinkSocialAccount)
 }
 
 func GetUserProfile(c *fiber.Ctx) error {
@@ -75,4 +77,31 @@ func GetUserArtworks(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(artworks)
+}
+
+func LinkSocialAccount(c *fiber.Ctx) error {
+	provider := c.Params("provider")
+	c.Context().SetUserValue("provider", provider)
+	user, err := goth_fiber.CompleteUserAuth(c)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	userID := c.Locals("user_id").(uint)
+	var dbUser models.User
+	if err := database.DB.First(&dbUser, userID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
+	}
+
+	switch provider {
+	case "google":
+		dbUser.GoogleID = user.UserID
+	case "instagram":
+		dbUser.InstagramID = user.UserID
+	case "twitter":
+		dbUser.TwitterID = user.UserID
+	}
+	database.DB.Save(&dbUser)
+
+	return c.JSON(fiber.Map{"message": "Conta vinculada com sucesso!", "user": dbUser})
 }
