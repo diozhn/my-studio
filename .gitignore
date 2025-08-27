@@ -10,3 +10,5 @@ go.sum
 # Ignora banco de dados e imagens
 *.db
 /uploads
+
+.env

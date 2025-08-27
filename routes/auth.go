@@ -3,6 +3,7 @@ package routes
 import (
 	"my-studio/database"
 	"my-studio/models"
+	"os"
 	"strings"
 	"time"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 func RegisterAuthRoutes(app *fiber.App) {
 	app.Post("/register", Register)
@@ -44,8 +47,6 @@ func Register(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"message": "User creating success"})
 }
-
-var jwtSecret = []byte("jwt-token-super-seguro")
 
 func Login(c *fiber.Ctx) error {
 	type Input struct {

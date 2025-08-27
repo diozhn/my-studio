@@ -6,9 +6,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	database.ConnectDB()
 	app := fiber.New()
 	app.Use(logger.New())
