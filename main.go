@@ -18,6 +18,8 @@ func main() {
 	})
 
 	routes.RegisterArtworkRoutes(app)
+	routes.RegisterAuthRoutes(app)
+	routes.UserRoutes(app)
 
 	app.Static("/uploads", "./uploads")
 	app.Listen(":3000")
