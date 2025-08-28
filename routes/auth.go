@@ -26,6 +26,7 @@ func RegisterAuthRoutes(app *fiber.App) {
 func Register(c *fiber.Ctx) error {
 	type Input struct {
 		Username string `json:"username"`
+		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
@@ -41,6 +42,7 @@ func Register(c *fiber.Ctx) error {
 
 	user := models.User{
 		Username: input.Username,
+		Email:    input.Email,
 		Password: string(hashed),
 	}
 
@@ -53,7 +55,7 @@ func Register(c *fiber.Ctx) error {
 
 func Login(c *fiber.Ctx) error {
 	type Input struct {
-		Username string `json:"username"`
+		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
@@ -63,7 +65,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	if err := database.DB.Where("username = ?", input.Username).First(&user).Error; err != nil {
+	if err := database.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
 		return c.Status(401).JSON(fiber.Map{"error": "User or password invalid"})
 	}
 
