@@ -187,6 +187,15 @@ func SocialAuthCallback(c *fiber.Ctx) error {
 		database.DB.Where("twitter_id = ?", user.UserID).First(&dbUser)
 	}
 
+	type UserResponse struct {
+		ID          uint   `json:"id"`
+		Username    string `json:"username"`
+		Email       string `json:"email"`
+		GoogleID    string `json:"google_id,omitempty"`
+		InstagramID string `json:"instagram_id,omitempty"`
+		TwitterID   string `json:"twitter_id,omitempty"`
+	}
+
 	// Se não existir, cria novo usuário
 	if dbUser.ID == 0 {
 		dbUser = models.User{
@@ -199,6 +208,15 @@ func SocialAuthCallback(c *fiber.Ctx) error {
 		database.DB.Create(&dbUser)
 	}
 
+	userResponse := UserResponse{
+		ID:          dbUser.ID,
+		Username:    dbUser.Username,
+		Email:       dbUser.Email,
+		GoogleID:    dbUser.GoogleID,
+		InstagramID: dbUser.InstagramID,
+		TwitterID:   dbUser.TwitterID,
+	}
+
 	// Gera JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": dbUser.ID,
@@ -208,7 +226,7 @@ func SocialAuthCallback(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"token": tokenString,
-		"user":  dbUser,
+		"user":  userResponse,
 	})
 }
 
