@@ -14,7 +14,7 @@ import (
 )
 
 func RegisterArtworkRoutes(app *fiber.App) {
-	app.Post("/artworks", RequireAuth, middlewares.IsArtworkOwner, CreateArtwork)
+	app.Post("/artworks", RequireAuth, CreateArtwork)
 	app.Post("/artworks/:id/like", LikeArtwork)
 	app.Get("/gallery", GetGallery)
 	app.Get("/top-artworks", GetTopArtworks)
@@ -119,7 +119,9 @@ func CreateArtwork(c *fiber.Ctx) error {
 		})
 	}
 
-	userID := c.Locals("user_id").(uint)
+	userIDFloat := c.Locals("user_id").(float64)
+	userID := uint(userIDFloat)
+
 	art := models.Artwork{
 		Title:     title,
 		Caption:   caption,

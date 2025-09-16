@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 	"github.com/markbates/goth"
@@ -23,8 +24,14 @@ func main() {
 
 	godotenv.Load()
 	database.Connect()
-	app := fiber.New()
+	app := fiber.New(
+		fiber.Config{
+			BodyLimit: 50 * 1024 * 1024, // 50 MB
+		},
+	)
 	app.Use(logger.New())
+
+	app.Use(cors.New())
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Welcome to My Studio!")
