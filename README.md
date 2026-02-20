@@ -1,7 +1,7 @@
-# Meu Estúdio 🎨
+## My Studio (TypeScript) 🎨
 
-Uma API escrita em Go para artistas postarem, visualizarem e interagirem com artes digitais.  
-Idealizada como um presente para minha artista favorita ❤️
+Uma API agora escrita em **Node.js + TypeScript** para artistas postarem, visualizarem e interagirem com artes digitais.  
+Originalmente o projeto foi feito em Go, mas toda a API foi refatorada para TypeScript.
 
 ---
 
@@ -13,24 +13,27 @@ Idealizada como um presente para minha artista favorita ❤️
 - Atualização e remoção de artes (com exclusão do arquivo da imagem)
 - Sistema de curtidas para as artes
 - Filtros por autor, data e título
-- **Autenticação de usuários (JWT e Social OAuth: Google, Instagram, Twitter)**
+- Autenticação de usuários com JWT (login, registro e refresh token)
 - Atualização de perfil de usuário
 - Listagem de artes de um usuário específico
+
+> Observação: o fluxo de OAuth social (Google, Instagram, Twitter) do código Go **ainda não foi reimplementado** em TypeScript.
 
 ---
 
 ## 🚀 Tecnologias
 
-- [Go (Golang)](https://golang.org/)
-- [Fiber](https://gofiber.io/) – Web framework
-- [GORM](https://gorm.io/) – ORM para banco de dados
-- [Supabase](https://supabase.com/) – Banco de dados PostgreSQL gerenciado (pode ser substituído por outro PostgreSQL)
-- [godotenv](https://github.com/joho/godotenv) – Carregamento de variáveis de ambiente
-- [goth](https://github.com/markbates/goth) / [goth_fiber](https://github.com/shareed2k/goth_fiber) – OAuth social
+- Node.js + TypeScript
+- Express – Web framework
+- PostgreSQL – via driver `pg`
+- Multer – upload de arquivos
+- jsonwebtoken – autenticação JWT
+- bcrypt – hash de senha
+- dotenv – variáveis de ambiente
 
 ---
 
-## 📦 Como rodar
+## 📦 Como rodar (TypeScript)
 
 ```bash
 # Clonar o projeto
@@ -38,15 +41,22 @@ git clone https://github.com/diozhn/my-studio.git
 cd my-studio
 
 # Instalar dependências
-go mod tidy
+npm install
 
-# Copiar o exemplo de variáveis de ambiente e editar
+# Criar arquivo de variáveis de ambiente
 cp .env.example .env
-# Edite o .env com suas credenciais do Supabase/PostgreSQL, JWT_SECRET e chaves dos provedores sociais
+# Edite o .env com suas credenciais do PostgreSQL e JWT_SECRET
 
-# Rodar o servidor
-go run main.go
+# Compilar o TypeScript
+npm run build
+
+# Rodar o servidor compilado
+npm start
+
+# ou em modo desenvolvimento (ts-node-dev)
+npm run dev
 ```
+
 Acesse em:
 http://localhost:3000
 
@@ -61,100 +71,37 @@ http://localhost:3000/uploads/nome_da_imagem.jpg
 
 ---
 
-## 📮 Rotas da API
+## 📮 Rotas da API (versão TypeScript)
 
 ### Autenticação
-| Método | Rota                         | Descrição                                      |
-| ------ | ---------------------------- | ---------------------------------------------- |
-| POST   | /register                    | Cria um novo usuário                           |
-| POST   | /login                       | Realiza login e retorna tokens                 |
-| POST   | /refresh-token               | Gera novo token de acesso                      |
-| GET    | /auth/:provider              | Inicia login social (Google, Instagram, Twitter)|
-| GET    | /auth/:provider/callback     | Callback do login social, retorna token e user |
+| Método | Rota           | Descrição                              |
+| ------ | -------------- | -------------------------------------- |
+| POST   | /register      | Cria um novo usuário                   |
+| POST   | /login         | Realiza login e retorna tokens         |
+| POST   | /refresh-token | Gera novo token de acesso              |
 
-**Resposta dos endpoints de autenticação:**
-- Nunca retorna senha ou refresh_token ao frontend.
-- Exemplo de resposta do login social:
-```json
-{
-  "token": "JWT_TOKEN",
-  "user": {
-    "id": 1,
-    "username": "nome",
-    "email": "email@exemplo.com",
-    "google_id": "opcional",
-    "instagram_id": "opcional",
-    "twitter_id": "opcional"
-  }
-}
-```
+**Observações:**
+- Senhas são armazenadas com bcrypt.
+- O refresh token é armazenado no banco e validado no backend.
 
 ### Usuários
-| Método | Rota                        | Descrição                                 |
-| ------ | --------------------------- | ----------------------------------------- |
-| GET    | /users/:id                  | Busca perfil de usuário                   |
-| PATCH  | /users/:id                  | Atualiza perfil do usuário (autenticado)  |
-| GET    | /users/:id/artworks         | Lista artes de um usuário                 |
+| Método | Rota                | Descrição                                 |
+| ------ | ------------------- | ----------------------------------------- |
+| GET    | /users/:id          | Busca perfil de usuário (protegida)      |
+| PATCH  | /users/:id          | Atualiza perfil do usuário (autenticado) |
+| GET    | /users/:id/artworks | Lista artes de um usuário                |
 
 ### Artes
-| Método | Rota                        | Descrição                                 |
-| ------ | --------------------------- | ----------------------------------------- |
-| GET    | /artworks                   | Lista todas as artes (com filtros)        |
-| POST   | /artworks                   | Cria uma arte (upload + form-data, auth) |
-| GET    | /artworks/:id               | Busca arte por ID                         |
-| PATCH  | /artworks/:id               | Atualiza arte (autenticado e dono)        |
-| DELETE | /artworks/:id               | Deleta a arte (autenticado e dono)        |
-| POST   | /artworks/:id/like          | Curte uma arte                            |
-| GET    | /top-artworks               | Lista artes mais curtidas                 |
-| GET    | /gallery                    | Galeria web simples (HTML)                |
-| GET    | /artworks/filter            | Lista artes filtradas                     |
-
----
-
-## 🛡️ Segurança
-
-- JWT_SECRET, DATABASE_URL e chaves OAuth devem ser definidos em variáveis de ambiente (.env)
-- Nunca exponha segredos ou senhas publicamente
-- Recomenda-se uso de HTTPS em produção
-- Senhas são armazenadas com bcrypt
-- Refresh token é validado no backend e nunca exposto ao frontend
-
----
-
-## 🗄️ Banco de Dados
-
-- Utiliza PostgreSQL (Supabase recomendado para facilidade e plano gratuito)
-- Migrations automáticas via GORM ao iniciar a aplicação
-
----
-
-## 🧪 Exemplo de envio (form-data)
-
-- `title: "Arte linda"`
-- `caption: "Feita com carinho"`
-- `image: (arquivo de imagem)`
-
----
-
-## 🔑 Exemplo de uso das rotas de autenticação
-
-**Cadastro:**
-```bash
-curl -X POST http://localhost:3000/register -H "Content-Type: application/json" -d '{"username":"user","password":"senha"}'
-```
-
-**Login:**
-```bash
-curl -X POST http://localhost:3000/login -H "Content-Type: application/json" -d '{"username":"user","password":"senha"}'
-```
-
-**Refresh Token:**
-```bash
-curl -X POST http://localhost:3000/refresh-token -H "Content-Type: application/json" -d '{"refresh_token":"SEU_REFRESH_TOKEN"}'
-```
-
-**Login Social:**
-- Redirecione o usuário para `/auth/google`, `/auth/instagram` ou `/auth/twitter` e trate o callback.
+| Método | Rota               | Descrição                                  |
+| ------ | ------------------ | ------------------------------------------ |
+| GET    | /artworks          | Lista todas as artes (com filtros)        |
+| POST   | /artworks          | Cria uma arte (upload + form-data, auth) |
+| GET    | /artworks/:id      | Busca arte por ID                         |
+| PATCH  | /artworks/:id      | Atualiza arte (autenticado e dono)        |
+| DELETE | /artworks/:id      | Deleta a arte (autenticado e dono)        |
+| POST   | /artworks/:id/like | Curte uma arte                            |
+| GET    | /top-artworks      | Lista artes mais curtidas                 |
+| GET    | /gallery           | Galeria web simples (HTML)                |
 
 ---
 
@@ -168,4 +115,4 @@ Authorization: Bearer SEU_TOKEN
 
 ---
 
-#### Feito com 💙 em Go por @diozhn
+#### Feito com 💙 originalmente em Go por @diozhn e agora refatorado para TypeScript

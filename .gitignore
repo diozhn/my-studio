@@ -1,12 +1,5 @@
-#Ignora binários
-*.exe
-*.out
-*.dll
-
-# Ignora dependências cacheadas
-vendor/
-go.sum
-
+dist
+node_modules
 # Ignora banco de dados e imagens
 *.db
 /uploads
