@@ -17,6 +17,7 @@ export class UserUseCase {
     return {
       id: user.id,
       username: user.username,
+      role: user.superuser ? "superuser" : "user",
       created_at: user.createdAt,
     };
   }

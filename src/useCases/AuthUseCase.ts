@@ -67,6 +67,7 @@ export class AuthUseCase {
     await this.userRepository.updateRefreshToken(user.id, refreshToken);
 
     return {
+      is_superuser: user.superuser,
       token,
       refresh_token: refreshToken,
     };
