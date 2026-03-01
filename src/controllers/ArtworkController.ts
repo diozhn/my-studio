@@ -27,7 +27,7 @@ export async function uploadImage(file: Buffer, mimetype: string) {
   const filename = `${Date.now()}`;
   const { data, error } = await supabase.storage
     .from("artworks")
-    .upload(`${filename}.${mimetype.split("/")[1]}`, file, {
+    .upload(`images/${filename}.${mimetype.split("/")[1]}`, file, {
       contentType: mimetype,
     })
 
@@ -48,7 +48,7 @@ export class ArtworkController {
       if (!title || !file) {
         return res.status(400).json({ error: "Bad request: title and image are required" });
       }
-
+      console.log(file.buffer)
       const imagePath = await uploadImage(file.buffer, file.mimetype);
 
       const { data } = supabase.storage.from("artworks").getPublicUrl(imagePath);
