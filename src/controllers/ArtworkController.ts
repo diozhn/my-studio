@@ -3,6 +3,7 @@ import { ArtworkUseCase } from "../useCases/ArtworkUseCase";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { supabase } from "../database/supabase-client";
 
 // Configurar multer para upload
 const storage = multer.diskStorage({
@@ -21,6 +22,19 @@ const storage = multer.diskStorage({
 
 export const upload = multer({ storage });
 
+
+export async function uploadImage(file: Buffer, filename: string) {
+  const { data, error } = await supabase.storage
+    .from("artworks")
+    .upload(`images/${filename}`, file, {
+      contentType: "image/jpeg",
+    })
+
+  if (error) throw error
+
+  return data.path
+}
+
 export class ArtworkController {
   constructor(private artworkUseCase: ArtworkUseCase) {}
 
@@ -34,7 +48,7 @@ export class ArtworkController {
         return res.status(400).json({ error: "Bad request: title and image are required" });
       }
 
-      const imageUrl = `/uploads/${file.filename}`;
+      const imageUrl = await uploadImage(file.buffer, file.filename);
 
       const artwork = await this.artworkUseCase.create({
         title,
