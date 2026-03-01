@@ -48,7 +48,11 @@ export class ArtworkController {
         return res.status(400).json({ error: "Bad request: title and image are required" });
       }
 
-      const imageUrl = await uploadImage(file.buffer, file.filename);
+      const imagePath = await uploadImage(file.buffer, file.filename);
+
+      const { data } = supabase.storage.from("artworks").getPublicUrl(imagePath);
+
+      const imageUrl = data.publicUrl;
 
       const artwork = await this.artworkUseCase.create({
         title,
