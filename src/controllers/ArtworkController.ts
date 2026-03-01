@@ -6,22 +6,9 @@ import fs from "fs";
 import { supabase } from "../database/supabase-client";
 
 // Configurar multer para upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}_${file.originalname}`;
-    cb(null, uniqueName);
-  },
+export const upload = multer({
+  storage: multer.memoryStorage(),
 });
-
-export const upload = multer({ storage });
-
 
 export async function uploadImage(file: Buffer, mimetype: string) {
   const filename = `${Date.now()}`;
