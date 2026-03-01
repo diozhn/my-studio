@@ -23,11 +23,12 @@ const storage = multer.diskStorage({
 export const upload = multer({ storage });
 
 
-export async function uploadImage(file: Buffer, filename: string) {
+export async function uploadImage(file: Buffer, mimetype: string) {
+  const filename = `${Date.now()}`;
   const { data, error } = await supabase.storage
     .from("artworks")
-    .upload(`images/${filename}`, file, {
-      contentType: "image/jpeg",
+    .upload(`${filename}.${mimetype.split("/")[1]}`, file, {
+      contentType: mimetype,
     })
 
   if (error) throw error
@@ -48,7 +49,7 @@ export class ArtworkController {
         return res.status(400).json({ error: "Bad request: title and image are required" });
       }
 
-      const imagePath = await uploadImage(file.buffer, file.filename);
+      const imagePath = await uploadImage(file.buffer, file.mimetype);
 
       const { data } = supabase.storage.from("artworks").getPublicUrl(imagePath);
 
